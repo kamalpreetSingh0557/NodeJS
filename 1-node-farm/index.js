@@ -25,7 +25,22 @@ const http = require('http');
 //////////////////////////////////////////////////////////////////
 // SERVER
 const server = http.createServer((req, res) => {
-    res.end(" Hello from server! ");
+    const pathName = req.url;
+    // routing in NodeJS
+    if(pathName === '/' || pathName === '/overview'){
+        res.end('This is the Overview');
+    } else if(pathName === '/product'){
+        res.end('This is the Product');
+    }else if(pathName === '/api'){
+        const data = fs.readFileSync(`${__dirname}/starter/dev-data/data.json`, 'utf-8');
+        res.end(data);
+    }else{ // Always "header-content" "res" se pehle likho
+        res.writeHead(404, {
+            'Content-type' : 'text/html',
+            'my-own-header' : 'hello-world'
+        });
+        res.end("<h1>Page Not Found! </h1>");
+    }
 });
 
 server.listen(8000, "127.0.0.1", (req, res) => {
