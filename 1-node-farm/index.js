@@ -1,5 +1,7 @@
 const fs = require('fs');
 const http = require('http');
+const { type } = require('os');
+const url = require('url');
 //////////////////////////////////////////////////////////////////
 // FILES
 //              Blocking, synchronous way
@@ -46,9 +48,12 @@ const replaceTemplate = (temp, product) => {
 }
 
 const server = http.createServer((req, res) => {
-    const pathName = req.url;
+    //const pathName = req.url;
+    // console.log(req.url);
+    // console.log(url.parse(req.url, true));
+    const {query, pathname} = url.parse(req.url, true);
     // routing in NodeJS
-    if(pathName === '/' || pathName === '/overview'){
+    if(pathname === '/' || pathname === '/overview'){
         res.writeHead(200, {'Content-type' : 'text/html'})
         // map => objects pe lgta hai is liye dataObj not data.map()
         //placeholders ko [in template-product] data [in data.json] se replace kr dia hai
@@ -57,9 +62,14 @@ const server = http.createServer((req, res) => {
         const output = tempOverview.replace('{%PRODUCT_CARDS%}', cardsHtml);
         //console.log(output);
         res.end(output);
-    } else if(pathName === '/product'){
-        res.end('This is the Product');
-    }else if(pathName === '/api'){
+    }else if(pathname === '/product'){
+        res.writeHead(200, {'Content-type' : 'text/html'});
+        //console.log(req.url);
+        //console.log(url.parse(req.url, true)); [query, pathname]
+        const product = dataObj[query.id];
+        const output = replaceTemplate(tempProduct, product);
+        res.end(output);
+    }else if(pathname === '/api'){
         res.writeHead(200, {'Content-type' : 'application/json'});
         res.end(data);
     }else{ // Always "header-content" "res" se pehle likho
