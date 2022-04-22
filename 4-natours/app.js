@@ -34,6 +34,48 @@ app.get('/api/v1/tours', (req, res) => {
     })
 });
 
+// app.get('/api/v1/tours/:id', (req, res) => {
+//     console.log(req.params); // { id: '5' } id string type ki hai
+//     const id = req.params.id * 1; // converting string into number type
+    
+//     if(id > tours.length){
+//         return res.status(404).json({
+//             status : "Fail",
+//             message : "Invalid ID"
+//         })
+//     }
+
+//     const tour = tours.find(el => el.id === id);
+//     res.status(200).json({
+//         status : "Success",
+//         data : {
+//             tour
+//         }
+//     });
+// });
+ 
+                // OR MUCH BETTER WAY
+app.get('/api/v1/tours/:id', (req, res) => {
+        //console.log(req.params); // { id: '5' } id string type ki hai
+        const id = req.params.id * 1; // converting string into number type
+    
+        const tour = tours.find(el => el.id === id);
+    
+        if(!tour){  // if tour is invalid
+            return res.status(404).json({
+                status : "Fail",
+                message : "Invalid ID"
+            })
+        }
+    
+        res.status(200).json({
+            status : "Success",
+            data : {
+                tour
+            }
+        });
+    });                
+
 app.post('/api/v1/tours', (req, res) => {
     //express.json() MIDDLEWARE used to acces the "req.body" data.
     
@@ -59,6 +101,40 @@ app.post('/api/v1/tours', (req, res) => {
             });
         }
     )   
+});
+
+app.patch('/api/v1/tours/:id', (req, res) => {
+    
+    if( req.params.id * 1 > tours.length){  
+        return res.status(404).json({
+            status : "Fail",
+            message : "Invalid ID"
+        })
+    }
+
+    res.status(200).json({
+        status : "Success",
+        data : {
+            tour : "<Tour is updated>"
+        }
+    });
+});   
+
+app.delete('/api/v1/tours/:id', (req, res) => {
+    
+    if( req.params.id * 1 > tours.length){  
+        return res.status(404).json({
+            status : "Fail",
+            message : "Invalid ID"
+        })
+    }
+
+    res.status(204).json({  // 204 => No Data
+        status : "Success",
+        data : {
+            tour : null
+        }
+    });
 });
 
 const port = 3000;
