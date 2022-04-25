@@ -1,0 +1,25 @@
+{
+  "name": "node-farm",
+  "version": "1.0.0",
+  "description": "Learning NodeJs",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kamalpreetSingh0557/NodeJS.git"
+  },
+  "author": "Jo Paaji",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/kamalpreetSingh0557/NodeJS/issues"
+  },
+  "homepage": "https://github.com/kamalpreetSingh0557/NodeJS#readme",
+  "dependencies": {
+    "slugify": "^1.6.5"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.15"
+  }
+}

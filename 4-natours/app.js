@@ -2,23 +2,12 @@ const express = require('express');
 const fs = require('fs');
 
 const app = express();
-
-// app.get('/', (req, res) => {
-//     res
-//       .status(200)
-//       .json({
-//             message : 'Hello from server !..',
-//             app : 'Natours'
-//         })
-//     });
-
-// app.post('/', (req, res) => {
-//     res.send("Post you details");
-//     });
-
-// app.use(MIDDLEWARE) 
-// app.use => Middleware ko use krne ke liye use kiya jata hai
 app.use(express.json()); 
+
+app.use((req, res, next) => {
+    console.log("Hello form Middleware");
+    next();
+})
 
 const tours = JSON.parse(
   fs.readFileSync(`${__dirname}/dev-data/data/tours-simple.json`)
@@ -34,27 +23,7 @@ app.get('/api/v1/tours', (req, res) => {
     })
 });
 
-// app.get('/api/v1/tours/:id', (req, res) => {
-//     console.log(req.params); // { id: '5' } id string type ki hai
-//     const id = req.params.id * 1; // converting string into number type
-    
-//     if(id > tours.length){
-//         return res.status(404).json({
-//             status : "Fail",
-//             message : "Invalid ID"
-//         })
-//     }
 
-//     const tour = tours.find(el => el.id === id);
-//     res.status(200).json({
-//         status : "Success",
-//         data : {
-//             tour
-//         }
-//     });
-// });
- 
-                // OR MUCH BETTER WAY
 app.get('/api/v1/tours/:id', (req, res) => {
         //console.log(req.params); // { id: '5' } id string type ki hai
         const id = req.params.id * 1; // converting string into number type
@@ -77,10 +46,6 @@ app.get('/api/v1/tours/:id', (req, res) => {
     });                
 
 app.post('/api/v1/tours', (req, res) => {
-    //express.json() MIDDLEWARE used to acces the "req.body" data.
-    
-    //console.log(req.body);
-    //res.send(`Data sent to server`);
 
 //what we do now is we will persist the new data[created by POST] in simple-json file
     const newId = tours[tours.length-1].id + 1; // new Id na rhe hai naye Tour ki [last TourId + 1]

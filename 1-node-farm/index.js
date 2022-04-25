@@ -1,7 +1,11 @@
+const { Console } = require('console'); // Core Modules
 const fs = require('fs');
 const http = require('http');
-const { type } = require('os');
 const url = require('url');
+
+const slugify = require('slugify');  // 3rd Party Modules
+
+const replaceTemplate = require('./modules/replaceTemplate') // Apni Modules
 //////////////////////////////////////////////////////////////////
 // FILES
 //              Blocking, synchronous way
@@ -33,19 +37,9 @@ const tempProduct = fs.readFileSync(`${__dirname}/starter/templates/template-pro
 const data = fs.readFileSync(`${__dirname}/starter/dev-data/data.json`, 'utf-8');
 const dataObj = JSON.parse(data); // Ye object mein convert kr deta hai
 
-const replaceTemplate = (temp, product) => {
-    let output = temp.replace(/{%PRODUCTNAME%}/g, product.productName);
-    output = output.replace(/{%IMAGE%}/g, product.image);
-    output = output.replace(/{%PRICE%}/g, product.price);
-    output = output.replace(/{%FROM%}/g, product.from);
-    output = output.replace(/{%NUTRIENTS%}/g, product.nutrients);
-    output = output.replace(/{%QUANTITY%}/g, product.quantity);
-    output = output.replace(/{%DESCRIPTION%}/g, product.description);
-    output = output.replace(/{%ID%}/g, product.id);
-    if(!product.organic)
-    output = output.replace(/{%NOT_ORGANIC%}/g, 'not-organic');
-    return output;
-}
+//console.log(slugify('Fresh Avocado', {lower : true}));
+const slugs = dataObj.map(el => slugify(el.productName, {lower : true}));
+console.log(slugs);
 
 const server = http.createServer((req, res) => {
     //const pathName = req.url;
