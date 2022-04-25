@@ -7,6 +7,11 @@ app.use(express.json());
 app.use((req, res, next) => {
     console.log("Hello form Middleware");
     next();
+});
+
+app.use((req, res, next) => {
+    req.requestTime = new Date().toISOString();
+    next();
 })
 
 const tours = JSON.parse(
@@ -14,14 +19,23 @@ const tours = JSON.parse(
 );
 
 app.get('/api/v1/tours', (req, res) => {
+    console.log(req.requestTime);
     res.status(200).json({
         status : 'success',
+        requestedAt : req.requestTime,
         results : tours.length,
         data : {                        //JSend method used
             tours
         }
     })
 });
+
+//This middleware doesn't runs because the above "req" ends the req-res cycles
+// Hence ordering of middleware matters.
+// app.use((req, res, next) => {
+//     console.log("Hello form Middleware");
+//     next();
+// }); 
 
 
 app.get('/api/v1/tours/:id', (req, res) => {
