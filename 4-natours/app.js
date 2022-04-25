@@ -118,7 +118,10 @@ const deleteTour = (req, res) => {
 };
 
 
-app.get('/api/v1/tours', getAllTours);
+app
+  .route('/api/v1/tours')
+  .get(getAllTours)
+  .post(addTour)
 
 //This middleware doesn't runs because the above "req" ends the req-res cycles
 // Hence ordering of middleware matters.
@@ -127,13 +130,11 @@ app.get('/api/v1/tours', getAllTours);
 //     next();
 // }); 
 
-app.get('/api/v1/tours/:id', getTour);                
-
-app.post('/api/v1/tours', addTour);
-
-app.patch('/api/v1/tours/:id', updateTour);   
-
-app.delete('/api/v1/tours/:id', deleteTour);
+app
+  .route('/api/v1/tours/:id')
+  .get(getTour)
+  .patch(updateTour)
+  .delete(deleteTour);
 
 const port = 3000;
 app.listen(port, () => {
