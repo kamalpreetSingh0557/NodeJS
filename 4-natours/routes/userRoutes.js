@@ -1,44 +1,10 @@
 const express = require('express');
+
+const userController = require('./../controllers/userController')
+
+const {getAllUsers, getUser, createUser, updateUser, deleteUser} = userController;
+
 const userRouter = express.Router(); 
-
-//2) Route Handlers or Controllers
-
-
-const getAllUsers = (req, res) => {
-    res.status(500).json({
-        status : "error",
-        message : "This route is not defined yet"
-    })
-};
-
-const getUser = (req, res) => {
-    res.status(500).json({
-        status : "error",
-        message : "This route is not defined yet"
-    })
-};
-
-const createUser = (req, res) => {
-    res.status(500).json({
-        status : "error",
-        message : "This route is not defined yet"
-    })
-};
-
-const updateUser = (req, res) => {
-    res.status(500).json({
-        status : "error",
-        message : "This route is not defined yet"
-    })
-};
-
-const deleteUser = (req, res) => {
-    res.status(500).json({
-        status : "error",
-        message : "This route is not defined yet"
-    })
-};
-
 
 userRouter
   .route('/')
