@@ -23,6 +23,8 @@ app.use((req, res, next) => {
     next();
 })
 
+
+//2) Route Handlers or Controllers
 const tours = JSON.parse(
   fs.readFileSync(`${__dirname}/dev-data/data/tours-simple.json`)
 );
@@ -60,7 +62,7 @@ const getTour = (req, res) => {
     });
 };
 
-const addTour = (req, res) => {
+const createTour = (req, res) => {
 
     //what we do now is we will persist the new data[created by POST] in simple-json file
         const newId = tours[tours.length-1].id + 1; // new Id na rhe hai naye Tour ki [last TourId + 1]
@@ -117,24 +119,78 @@ const deleteTour = (req, res) => {
     });
 };
 
+const getAllUsers = (req, res) => {
+    res.status(500).json({
+        status : "error",
+        message : "This route is not defined yet"
+    })
+};
 
-app
-  .route('/api/v1/tours')
+const getUser = (req, res) => {
+    res.status(500).json({
+        status : "error",
+        message : "This route is not defined yet"
+    })
+};
+
+const createUser = (req, res) => {
+    res.status(500).json({
+        status : "error",
+        message : "This route is not defined yet"
+    })
+};
+
+const updateUser = (req, res) => {
+    res.status(500).json({
+        status : "error",
+        message : "This route is not defined yet"
+    })
+};
+
+const deleteUser = (req, res) => {
+    res.status(500).json({
+        status : "error",
+        message : "This route is not defined yet"
+    })
+};
+
+// 3) ROUTES
+
+const tourRouter = express.Router(); // it returns a middleware OR it is a middleware function
+// tourRouter is the subapplication that we created 
+//which in turn hai its own routes
+tourRouter
+  .route('/')
   .get(getAllTours)
-  .post(addTour)
+  .post(createTour);
 
-//This middleware doesn't runs because the above "req" ends the req-res cycles
-// Hence ordering of middleware matters.
-// app.use((req, res, next) => {
-//     console.log("Hello form Middleware");
-//     next();
-// }); 
-
-app
-  .route('/api/v1/tours/:id')
+tourRouter
+  .route('/:id')
   .get(getTour)
   .patch(updateTour)
   .delete(deleteTour);
+
+const userRouter = express.Router(); 
+
+userRouter
+  .route('/')
+  .get(getAllUsers)
+  .post(createUser);
+
+userRouter
+  .route('/:id')
+  .get(getUser)
+  .patch(updateUser)
+  .delete(deleteUser);
+
+// Mounting the new router on a route
+// We cannot use routers before we actually declare them
+// If now there is a request for '/api/v1/tours/:id'
+// The req will enter the middleware stack an when it hits below mentioned 
+// middleware it will run tourRouter because this route here is matched 
+// and then it enters userRouter  
+app.use('/api/v1/tours', tourRouter);
+app.use('/api/v1/users', userRouter);  
 
 const port = 3000;
 app.listen(port, () => {
