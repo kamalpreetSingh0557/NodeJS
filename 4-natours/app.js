@@ -8,16 +8,19 @@ const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
 
 // process.cwd() is similar to "./"
-// console.log("process.cwd(): ", process.cwd());
-// console.log("__dirname: ", __dirname);
+//  
 
 // 1) MIDDLEWARE
-app.use(morgan("dev")); //it returns a middleware function just like 
+if(process.env.NODE_ENV === "development"){
+app.use(morgan("dev"));
+} //it returns a middleware function just like 
 // How to see documentation
 // see from morgan on github[index.js] module.exports wala function dekho [source code]
 // we {http method, url, status code, res time, size of res in bytes}
 
 app.use(express.json()); 
+
+app.use(express.static(`${__dirname}/public`));
 
 app.use((req, res, next) => {
     console.log("Hello form Middleware");
