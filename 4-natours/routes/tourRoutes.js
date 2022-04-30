@@ -14,8 +14,8 @@ const router = express.Router(); // it returns a middleware OR it is a middlewar
 //   next(); // agr next() nhi hoga to req aage nhi jayegi aur whi pe stuck ho jayegi
 // });       // bs load hoti rhegi
 
-//v2
-router.param('id', checkID);       
+//v2 [Removed due to Refactoring MVC]
+//router.param('id', checkID);       
 
 // router is the subapplication that we created 
 //which in turn hai its own routes
