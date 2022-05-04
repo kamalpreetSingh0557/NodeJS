@@ -22,7 +22,7 @@ const router = express.Router(); // it returns a middleware OR it is a middlewar
 router
   .route('/')
   .get(getAllTours)
-  .post(checkBody, createTour);
+  .post(createTour);
 
 router
   .route('/:id')
