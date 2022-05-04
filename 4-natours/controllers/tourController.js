@@ -8,13 +8,24 @@ const Tour = require('./../models/tourModels')
 exports.getAllTours = async(req, res) => {
    try{
        console.log(req.query);
-
-       // 1st Method of writing a query
+        // 1st method
         const queryObj = {...req.query};
         const excludedFields = ['page', 'sort', 'limit', 'fields'];
         excludedFields.forEach(el => delete queryObj[el]);
 
-        const tours = await Tour.find(queryObj);   //Tour.find(queryObj) returns "QUERY"
+        // Conceptual Thing see note
+        const query = Tour.find(queryObj);   //Tour.find(queryObj) returns "QUERY"
+
+        // const query = Tour.find({  // filter object
+        //     duration : 5,            
+        //     difficulty : 'easy'
+        // });
+
+        const tours = await query;
+
+        // 2nd Method [CHAINING using Special Mongoose Methods]
+        //const tours = await Tour.find().where('duration').equals(5).where('difficulty').equals('easy');
+
 
         res.status(200).json({
             status : 'success',
@@ -112,18 +123,3 @@ exports.deleteTour = async(req, res) => {
         })
     }
 };
-
-
-/*
-// 1st Method of writing a query
-      
-        //Tour.find(queryObj) returns "QUERY"
-
-        // const tours = await Tour.find({  // filter object
-        //     duration : 5,            
-        //     difficulty : 'easy'
-        // });
-
-      // 2nd Method [CHAINING using Special Mongoose Methods]
-      //const tours = await Tour.find().where('duration').equals(5).where('difficulty').equals('easy');
-*/
