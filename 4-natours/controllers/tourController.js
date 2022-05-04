@@ -1,36 +1,23 @@
 const fs = require('fs');
-const { findOneAndUpdate } = require('./../models/tourModels');
 
 //console.log('tour controller');
-console.log("process.cwd(): ", process.cwd() + '../models/tourModels');
+//console.log("process.cwd(): ", process.cwd() + '../models/tourModels');
+
 const Tour = require('./../models/tourModels')
-//----------------------------------------------------------
-// process.cwd() is similar to "./" 
-// console.log("tourController");
-// console.log("process.cwd(): ", process.cwd());
-// console.log("__dirname: ", __dirname);
-// console.log(`${__dirname}/../dev-data/data/tours-simple.json`);
-
-// __dirname = E:\NodeJS Workspace\4-natours\routes
-// __dirname/.. = E:\NodeJS Workspace\4-natours
-//----------------------------------------------------------
-//[Removed due to Refactoring MVC]
-
-// exports.checkBody = (req, res, next) => {
-//     console.log('inside bodyChecker');
-//     console.log(req.body);
-//     if(!req.body.name || !req.body.price){
-//         return res.status(400).json({
-//             status : "fail",
-//             message : "Missing name or price"
-//         })
-//     }
-//     next();
-// }
 
 exports.getAllTours = async(req, res) => {
    try{
-        const tours = await Tour.find();
+       console.log(req.query);
+
+       // 1st Method of writing a query
+        // const tours = await Tour.find({  // filter object
+        //     duration : 5,            
+        //     difficulty : 'easy'
+        // });
+
+      // 2nd Method [CHAINING using Special Mongoose Methods]
+      const tours = await Tour.find().where('duration').equals(5).where('difficulty').equals('easy');
+
         res.status(200).json({
             status : 'success',
             // requestedAt : req.requestTime,
