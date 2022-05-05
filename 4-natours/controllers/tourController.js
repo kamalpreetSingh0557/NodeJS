@@ -7,25 +7,36 @@ const Tour = require('./../models/tourModels')
 
 exports.getAllTours = async(req, res) => {
    try{
-       console.log(req.query);
-        // 1st method
-        const queryObj = {...req.query};
-        const excludedFields = ['page', 'sort', 'limit', 'fields'];
-        excludedFields.forEach(el => delete queryObj[el]);
+    // 1A) Filtering
+    console.log(req.query);
+    const queryObj = {...req.query};
+    const excludedFields = ['page', 'sort', 'limit', 'fields'];
+    excludedFields.forEach(el => delete queryObj[el]);
 
-        // Conceptual Thing see note
-        const query = Tour.find(queryObj);   //Tour.find(queryObj) returns "QUERY"
+    // 1B) Advance Filtering [less than, leass than equals to, greter than, greater than equals to]
+    
+/* 
+    Querying inside URL :- 
+    127.0.0.1:3000/api/v1/tours?duration[gte]=5&difficulty=easy&page=2&limit=10
+    
+    duration[gte]=5  :- Key[Operator] = Value
+---------------------------------------------------------------------------------------------
+    Manually writing "Filter" object for Querying in MongoDB
+  (i)  {difficulty : 'easy', duration : {$gte : 5}}  When we want to use an operator, we need to start another object.
+    
+    // queryObject [console.log(req.query)] when using standard way of filtering [Querying inside URL]
+  (ii)  { difficulty: 'easy', duration: { gte: '5' }}
 
-        // const query = Tour.find({  // filter object
-        //     duration : 5,            
-        //     difficulty : 'easy'
-        // });
+  Comparing (i) & (ii) we see that 
+    queryObj does not have MongoDB operator "$" in front of operator name "gte"
+*/
 
-        const tours = await query;
+    let queryStr = JSON.stringify(queryObj);
+    //console.log(queryStr);
+    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, match => `$${match}`);
 
-        // 2nd Method [CHAINING using Special Mongoose Methods]
-        //const tours = await Tour.find().where('duration').equals(5).where('difficulty').equals('easy');
-
+    const query = Tour.find(JSON.parse(queryStr)); 
+    const tours = await query;
 
         res.status(200).json({
             status : 'success',
@@ -39,7 +50,7 @@ exports.getAllTours = async(req, res) => {
    catch(err){
         res.status(400).json({
             status : "fail",
-            message : "Data not found"
+            message : err
         });
    }
 };
@@ -123,3 +134,23 @@ exports.deleteTour = async(req, res) => {
         })
     }
 };
+ /*
+        console.log(req.query);
+        // 1st method
+        const queryObj = {...req.query};
+        const excludedFields = ['page', 'sort', 'limit', 'fields'];
+        excludedFields.forEach(el => delete queryObj[el]);
+
+        // Conceptual Thing refer notes in lecture 95
+        const query = Tour.find(queryObj);   //Tour.find(queryObj) returns "QUERY"
+
+        // const query = Tour.find({  // filter object
+        //     duration : 5,            
+        //     difficulty : 'easy'
+        // });
+
+        const tours = await query;
+
+        // 2nd Method [CHAINING using Special Mongoose Methods]
+        //const tours = await Tour.find().where('duration').equals(5).where('difficulty').equals('easy');
+ */
