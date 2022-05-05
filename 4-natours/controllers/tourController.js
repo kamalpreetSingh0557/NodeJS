@@ -7,13 +7,14 @@ const Tour = require('./../models/tourModels')
 
 exports.getAllTours = async(req, res) => {
    try{
-    // 1A) Filtering
+// 1A) Filtering
+    console.log("req.query");
     console.log(req.query);
     const queryObj = {...req.query};
     const excludedFields = ['page', 'sort', 'limit', 'fields'];
     excludedFields.forEach(el => delete queryObj[el]);
 
-    // 1B) Advance Filtering [less than, leass than equals to, greter than, greater than equals to]
+// 1B) Advance Filtering [less than, leass than equals to, greter than, greater than equals to]
     
 /* 
     Querying inside URL :- 
@@ -34,8 +35,35 @@ exports.getAllTours = async(req, res) => {
     let queryStr = JSON.stringify(queryObj);
     //console.log(queryStr);
     queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, match => `$${match}`);
+    //find({difficulty : 'easy', duration : {$gte : 5}});
+    let query = Tour.find(JSON.parse(queryStr)); 
+    
+// 2) Sorting
+//tour.find returns a query and so we stored that query object in "query" variable, 
+//so that later on we can keep chaining more methods to it.
+//And Mongoose will then automatically sort the result based on the price.
+    if(req.query.sort){
+        // How to do it in Mongoose 
+        const sortBy = req.query.sort.split(',').join(' ');
+        //console.log(sortBy);
+        //sort('price ratingsAverage')
+        query = query.sort(sortBy);
+    }else{ //Default case so in case that the user does not specify any SORT field in the URL query string,
+        query = query.sort('-createdAt'); 
+    } 
 
-    const query = Tour.find(JSON.parse(queryStr)); 
+// 3) Field Limiting
+    if(req.query.fields){
+        //console.log("req.query.fields : " + req.query.fields);
+        const fields = req.query.fields.split(',').join(' ');
+        //console.log(fields);
+        //query.select('name duration price');
+        query = query.select(fields);
+    }else{
+        query = query.select('-__v');
+    }
+
+// EXECUTING QUERY
     const tours = await query;
 
         res.status(200).json({
@@ -135,7 +163,6 @@ exports.deleteTour = async(req, res) => {
     }
 };
  /*
-        console.log(req.query);
         // 1st method
         const queryObj = {...req.query};
         const excludedFields = ['page', 'sort', 'limit', 'fields'];

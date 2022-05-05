@@ -46,8 +46,17 @@ const tourSchema = new mongoose.Schema({
     images : [String],
     createdAt : {
       type : Date,
-      default : Date.now()
-    },
+      default : Date.now(),
+    // Here we are permanently hide this createdAt field from the output.      
+      select: false
+  },
+/* Lecture 98
+We can exclude fields[name, price] right from the schema. That can be very useful,
+For example, when we have sensitive data that should only be used internally.
+For example, stuff like passwords should never be exposed to the client and so therefore, 
+we can exclude some fields right in the schema.
+So for example, we might not want the user to see when exactly each tour was created.
+*/
     startDates : [Date],
 });
   
