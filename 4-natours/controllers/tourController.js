@@ -49,7 +49,7 @@ exports.getAllTours = async(req, res) => {
         //sort('price ratingsAverage')
         query = query.sort(sortBy);
     }else{ //Default case so in case that the user does not specify any SORT field in the URL query string,
-        query = query.sort('-createdAt'); 
+        query = query.sort('_id'); 
     } 
 
 // 3) Field Limiting
@@ -61,6 +61,30 @@ exports.getAllTours = async(req, res) => {
         query = query.select(fields);
     }else{
         query = query.select('-__v');
+    }
+/* 
+    4) Pagination
+limit = amount of results we want in a query
+skip =  amount of results that should be skipped before actually querying data.
+
+    page=3&limit=10 Page 1 [1-10], Page 2 [11-20], Page 3 [21-30]
+    query.skip(20).limit(10);
+
+    Error : same values shown in Page 1,2,3 while querying our data in MongoDB
+    Sol: https://stackoverflow.com/questions/68246123/filter-sort-and-paginate-in-mongoose-returns-duplicate-value  
+    query = query.sort('-createdAt') to query = query.sort('_id'); 
+*/  
+    const page = req.query.page * 1 || 1;
+    const limit = req.query.limit * 1 || 100;
+    const skip = (page-1) * limit;
+    query = query.skip(skip).limit(limit);
+
+    if(req.query.page){ //When user selects a page that does not exist.
+//If the number of documents that we skip is greater than the number of documents that actually exists well then that means that the page does not exist.
+        const numTours = await Tour.countDocuments();
+        if(skip >= numTours){
+            throw new Error("This page does not exist")
+        }
     }
 
 // EXECUTING QUERY
@@ -74,13 +98,13 @@ exports.getAllTours = async(req, res) => {
                 tours
             }
         })
-   }
+    }
    catch(err){
         res.status(400).json({
             status : "fail",
             message : err
         });
-   }
+    }
 };
 
 exports.getTour = async(req, res) => {
