@@ -1,7 +1,7 @@
 const express = require('express');
 const tourController = require('./../controllers/tourController')
 
-const {getAllTours, getTour, createTour, updateTour, deleteTour, checkID, checkBody} = tourController;
+const {getAllTours, getTour, createTour, updateTour, deleteTour, aliasTopTours} = tourController;
 
 // console.log("tourRoutes");
 // console.log("process.cwd(): ", process.cwd());
@@ -19,6 +19,11 @@ const router = express.Router(); // it returns a middleware OR it is a middlewar
 
 // router is the subapplication that we created 
 //which in turn hai its own routes
+
+router         // Lec 100 [Aliasing]
+  .route('/top-5-tours')
+  .get(aliasTopTours, getAllTours);
+
 router
   .route('/')
   .get(getAllTours)

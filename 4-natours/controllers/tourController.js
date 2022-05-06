@@ -3,7 +3,14 @@ const fs = require('fs');
 //console.log('tour controller');
 //console.log("process.cwd(): ", process.cwd() + '../models/tourModels');
 
-const Tour = require('./../models/tourModels')
+const Tour = require('./../models/tourModels');
+
+exports.aliasTopTours = (req, res, next) => {
+    req.query.limit = '5';
+    req.query.sort = '-ratingsAverage,price';
+    req.query.fields = 'name,price,ratingsAverage,summary,difficulty';
+    next();
+}
 
 exports.getAllTours = async(req, res) => {
    try{
