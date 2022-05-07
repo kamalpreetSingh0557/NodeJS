@@ -4,6 +4,7 @@ const fs = require('fs');
 //console.log("process.cwd(): ", process.cwd() + '../models/tourModels');
 
 const Tour = require('./../models/tourModels');
+const APIFeatures = require('./../utils/apifeatures');
 
 exports.aliasTopTours = (req, res, next) => {
     req.query.limit = '5';
@@ -12,90 +13,71 @@ exports.aliasTopTours = (req, res, next) => {
     next();
 }
 
+// class APIFeatures{
+//     constructor(query, queryString){
+//         this.query = query;
+//         this.queryString = queryString
+//     }
+
+//     filter() {
+//         const queryObj = {...this.queryString};
+//         const excludedFields = ['page', 'sort', 'limit', 'fields'];
+//         excludedFields.forEach(el => delete queryObj[el]);
+//         let queryStr = JSON.stringify(queryObj);
+//         queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, match => `$${match}`);
+        
+//         this.query = this.query.find(JSON.parse(queryStr)); 
+//         return this;
+//     }
+
+//     sorting() {
+//         if(this.queryString.sort){
+//             const sortBy = this.queryString.sort.split(',').join(' ');
+//             this.query = this.query.sort(sortBy);
+//         }else{
+//             this.query = this.query.sort('_id'); 
+//         } 
+//         return this;
+//     }
+
+//     limitFields(){
+//         if(this.queryString.fields){
+//             const fields = this.queryString.fields.split(',').join(' ');
+//             this.query = this.query.select(fields);
+//         }else{
+//             this.query = this.query.select('-__v');
+//         }
+
+//         return this;
+//     }
+
+//     pagination() {
+//         const page = this.queryString.page * 1 || 1;
+//         const limit = this.queryString.limit * 1 || 100;
+//         const skip = (page-1) * limit;
+//         this.query = this.query.skip(skip).limit(limit);
+    
+//         // if(this.queryString.page){ 
+//         //     const numTours = await this.query.countDocuments();
+//         //     if(skip >= numTours){
+//         //         throw new Error("This page does not exist")
+//         //     }
+//         // }
+
+//         return this;
+//     }
+// }
+
 exports.getAllTours = async(req, res) => {
-   try{
-// 1A) Filtering
-    console.log("req.query");
-    console.log(req.query);
-    const queryObj = {...req.query};
-    const excludedFields = ['page', 'sort', 'limit', 'fields'];
-    excludedFields.forEach(el => delete queryObj[el]);
-
-// 1B) Advance Filtering [less than, leass than equals to, greter than, greater than equals to]
-    
-/* 
-    Querying inside URL :- 
-    127.0.0.1:3000/api/v1/tours?duration[gte]=5&difficulty=easy&page=2&limit=10
-    
-    duration[gte]=5  :- Key[Operator] = Value
----------------------------------------------------------------------------------------------
-    Manually writing "Filter" object for Querying in MongoDB
-  (i)  {difficulty : 'easy', duration : {$gte : 5}}  When we want to use an operator, we need to start another object.
-    
-    // queryObject [console.log(req.query)] when using standard way of filtering [Querying inside URL]
-  (ii)  { difficulty: 'easy', duration: { gte: '5' }}
-
-  Comparing (i) & (ii) we see that 
-    queryObj does not have MongoDB operator "$" in front of operator name "gte"
-*/
-
-    let queryStr = JSON.stringify(queryObj);
-    //console.log(queryStr);
-    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, match => `$${match}`);
-    //find({difficulty : 'easy', duration : {$gte : 5}});
-    let query = Tour.find(JSON.parse(queryStr)); 
-    
-// 2) Sorting
-//tour.find returns a query and so we stored that query object in "query" variable, 
-//so that later on we can keep chaining more methods to it.
-//And Mongoose will then automatically sort the result based on the price.
-    if(req.query.sort){
-        // How to do it in Mongoose 
-        const sortBy = req.query.sort.split(',').join(' ');
-        //console.log(sortBy);
-        //sort('price ratingsAverage')
-        query = query.sort(sortBy);
-    }else{ //Default case so in case that the user does not specify any SORT field in the URL query string,
-        query = query.sort('_id'); 
-    } 
-
-// 3) Field Limiting
-    if(req.query.fields){
-        //console.log("req.query.fields : " + req.query.fields);
-        const fields = req.query.fields.split(',').join(' ');
-        //console.log(fields);
-        //query.select('name duration price');
-        query = query.select(fields);
-    }else{
-        query = query.select('-__v');
-    }
-/* 
-    4) Pagination
-limit = amount of results we want in a query
-skip =  amount of results that should be skipped before actually querying data.
-
-    page=3&limit=10 Page 1 [1-10], Page 2 [11-20], Page 3 [21-30]
-    query.skip(20).limit(10);
-
-    Error : same values shown in Page 1,2,3 while querying our data in MongoDB
-    Sol: https://stackoverflow.com/questions/68246123/filter-sort-and-paginate-in-mongoose-returns-duplicate-value  
-    query = query.sort('-createdAt') to query = query.sort('_id'); 
-*/  
-    const page = req.query.page * 1 || 1;
-    const limit = req.query.limit * 1 || 100;
-    const skip = (page-1) * limit;
-    query = query.skip(skip).limit(limit);
-
-    if(req.query.page){ //When user selects a page that does not exist.
-//If the number of documents that we skip is greater than the number of documents that actually exists well then that means that the page does not exist.
-        const numTours = await Tour.countDocuments();
-        if(skip >= numTours){
-            throw new Error("This page does not exist")
-        }
-    }
-
+   try{ 
 // EXECUTING QUERY
-    const tours = await query;
+        const features = new APIFeatures(Tour.find(), req.query)
+            .filter()
+            .sorting()
+            .limitFields()
+            .pagination();
+        //console.log(features);
+        const tours = await features.query;
 
         res.status(200).json({
             status : 'success',
@@ -193,6 +175,65 @@ exports.deleteTour = async(req, res) => {
         })
     }
 };
+
+exports.getTourStats = async(req, res) => {
+    try{
+        const stats = await Tour.aggregate([
+            { // match = similar to filter
+                $match : { ratingsAverage : { $gte : 4.5 }}
+            },
+//Statistics for all the tours together,     
+
+//             {
+//                 $group : { 
+//                     _id : null,
+// //For each of the document that's gonna go through this pipeline, one will be added to this numTours
+//                     numTours : {$sum : 1},
+//                     numRatings : {$avg : "$ratingsQuantity"},
+//                     avgRating : {$avg : "$ratingsAverage"},
+//                     avgPrice : {$avg : "$price"},
+//                     minPrice : {$min : "$price"},
+//                     minPrice : {$max : "$price"},
+//                 }
+//             }
+
+
+//Grouping our results for different fields
+            {
+                $group : { 
+                    _id : { $toUpper : "$difficulty"}, // we can even,do some operations with this one
+                    //_id : "$difficulty", 
+                    //_id : "$ratingsAverage",
+                    numTours : {$sum : 1},
+                    numRatings : {$avg : "$ratingsQuantity"},
+                    avgRating : {$avg : "$ratingsAverage"},
+                    avgPrice : {$avg : "$price"},
+                    minPrice : {$min : "$price"},
+                    minPrice : {$max : "$price"},
+                }
+            },
+            {
+                $sort : { avgPrice : 1 } // 1 for Ascending
+            },
+            { // we can repeat stages
+                $match  : { _id : { $ne : "EASY"}}
+            }
+        ])
+
+        res.status(200).json({
+            status : "Success",
+            data : {
+               stats 
+            }
+        });
+    }
+    catch(err){
+        res.status(400).json({
+            status : 'fail',
+            message : err
+        })
+    }
+}
  /*
         // 1st method
         const queryObj = {...req.query};
