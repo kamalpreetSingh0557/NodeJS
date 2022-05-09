@@ -58,9 +58,17 @@ we can exclude some fields right in the schema.
 So for example, we might not want the user to see when exactly each tour was created.
 */
     startDates : [Date],
+}, {
+  toJSON : {virtuals : true},
+  toObject : {virtuals : true}    
 });
   
   const Tour = mongoose.model("Tour", tourSchema);
+
+  // modelSchema.virtual(nameOfVirtualProperty).get(callBack)
+  tourSchema.virtual('durationWeeks').get(function(){
+    return this.duration / 7;
+  })
   
 // Method 1  
 //   const testTour = new Tour({

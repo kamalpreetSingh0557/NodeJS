@@ -1,7 +1,7 @@
 const express = require('express');
 const tourController = require('./../controllers/tourController')
 
-const {getAllTours, getTour, createTour, updateTour, deleteTour, aliasTopTours, getTourStats} = tourController;
+const {getAllTours, getTour, createTour, updateTour, deleteTour, aliasTopTours, getTourStats, getMonthlyPlan} = tourController;
 
 // console.log("tourRoutes");
 // console.log("process.cwd(): ", process.cwd());
@@ -20,9 +20,14 @@ const router = express.Router(); // it returns a middleware OR it is a middlewar
 // router is the subapplication that we created 
 //which in turn hai its own routes
 
-router         // Lec 100 [Aliasing]
+router         // Lec 102 [Aggregation Pipeline]
   .route('/tour-stats')
   .get(getTourStats);
+
+router         // Lec 103 [Aggregation Pipeline : Real World Problem]
+  .route('/monthly-plan/:year')
+  .get(getMonthlyPlan);
+
 
 router         // Lec 100 [Aliasing]
   .route('/top-5-tours')
