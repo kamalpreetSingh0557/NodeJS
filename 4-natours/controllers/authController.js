@@ -31,7 +31,7 @@ exports.signUp = async(req, res, next) => {
     }
 };
 
-exports.login = (req, res, next) => {
+exports.login = async(req, res, next) => {
     const {email, password} = req.body;
     // 1) Check if user entered email and password
     if(!email || !password){
@@ -42,7 +42,18 @@ exports.login = (req, res, next) => {
     }
     try{
     // 2) Check is user exist and password is correct
-        const user = User.findOne({email});
+// Explicitly selecting password [even when "select:false" in schema]
+// so that pass is not visible in get request for users    
+        const user = await User.findOne({email}).select('+password'); 
+/* 
+How do i match my encrypted Pass in DB to the one which user entered while loggingIn
+"abcxyz1234" === "12$lDGOdlzLuQ8W8.udyoF5Sq/KS.Bn9dx9gs.Em6ZIQHZ"
+So the only way of doing it is to actually encrypt this password["abcxyz1234"]
+as well, and then compare it with the encrypted one
+                 Checking  DONE IN USER MODEL
+*/
+
+        const correct = user.correctPassword(password, user.password);
     // 3) If everything is ok, send token to client
         const token = " ";
         res.status(200).json({
