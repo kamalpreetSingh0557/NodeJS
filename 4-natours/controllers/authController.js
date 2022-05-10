@@ -54,6 +54,14 @@ as well, and then compare it with the encrypted one
 */
 
         const correct = user.correctPassword(password, user.password);
+
+        if(!user || !correct){
+            return res.status(400).json({
+                status : 'fail',
+                message : 'email or password is incorrect'
+            });
+        }
+        
     // 3) If everything is ok, send token to client
         const token = " ";
         res.status(200).json({
