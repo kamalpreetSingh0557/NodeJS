@@ -1,7 +1,7 @@
 const User = require('./../models/userModel');
 const jwt = require('jsonwebtoken');
 
-exports.signToken = id => {
+const signToken = id => {
     return jwt.sign({id}, process.env.JWT_SECRET, {
         expiresIn : process.env.JWT_EXPIRES_IN
     });
@@ -58,12 +58,9 @@ How do i match my encrypted Pass in DB to the one which user entered while loggi
 So the only way of doing it is to actually encrypt this password["abcxyz1234"]
 as well, and then compare it with the encrypted one
                  Checking  DONE IN USER MODEL
-*/
 
-        const correct = await user.correctPassword(password, user.password);
-/*
         const user = await User.findOne({email}).select('+password');
-        const correct = user.correctPassword(password, user.password);
+        const correct = await user.correctPassword(password, user.password);
         if(!user || !correct){
             return res.status(400).json({
                 status : 'fail',
@@ -87,10 +84,11 @@ and then there's not gonna be any problem. But if the user exists, then it will 
         const token = signToken(user._id);
         res.status(200).json({
             status : "success",
-                message : "User loggedIn",
-                token
+            message : "User loggedIn",
+            token
         })
     }catch(err){
+        console.log(err);
         return res.status(400).json({
             status : 'fail',
             message : err
