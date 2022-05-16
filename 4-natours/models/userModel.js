@@ -31,7 +31,8 @@ const userSchema = new mongoose.Schema({
             },                    //throws the error and display below message
             message : 'Passwords are not same!'
         }
-    }
+    }, 
+    passwordChangedAt : Date  // Lec 132
 });
 
 userSchema.pre('save', async function(next){
@@ -65,6 +66,17 @@ But again, right now that's not possible because the password is not available i
 And so that's why we actually have to pass in userPassword as well.
 */
 
+userSchema.methods.changedPasswordAfter = async function(JWTTimestamp){
+    if(this.passwordChangedAt){
+        const changedTimestamp = parseInt(this.passwordChangedAt.getTime() / 1000 , 10);
+        
+        console.log(changedTimestamp, JWTTimestamp);
+// If the user had changed their password after the token was issued we don't want to give access to the protected route.        
+        return JWTTimestamp < changedTimestamp; // 300 < 200 
+    }
+    return false;
+    next();
+}
 
 const User = mongoose.model('User', userSchema);
 
