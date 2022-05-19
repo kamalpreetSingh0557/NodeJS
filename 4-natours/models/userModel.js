@@ -32,7 +32,14 @@ const userSchema = new mongoose.Schema({
             message : 'Passwords are not same!'
         }
     }, 
-    passwordChangedAt : Date  // Lec 132
+    passwordChangedAt : Date, // Lec 132
+    role : {
+        type : String,
+        //enums are basically used for restricting the values of a particular field in the schema.
+        //enum validator in order to only allow certain types of roles here to be specified
+        enum : ['user', 'guide', 'lead-guide', 'admin'],
+        default : 'user'  
+    }
 });
 
 userSchema.pre('save', async function(next){
@@ -67,15 +74,16 @@ And so that's why we actually have to pass in userPassword as well.
 */
 
 userSchema.methods.changedPasswordAfter = async function(JWTTimestamp){
+    console.log('inside changed password : ' + this.passwordChangedAt);
     if(this.passwordChangedAt){
+        console.log('inside if : ' + this.passwordChangedAt);
         const changedTimestamp = parseInt(this.passwordChangedAt.getTime() / 1000 , 10);
         
         console.log(changedTimestamp, JWTTimestamp);
 // If the user had changed their password after the token was issued we don't want to give access to the protected route.        
-        return JWTTimestamp < changedTimestamp; // 300 < 200 
+        return JWTTimestamp < changedTimestamp; // 300 < 200  
     }
     return false;
-    next();
 }
 
 const User = mongoose.model('User', userSchema);

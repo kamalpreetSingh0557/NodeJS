@@ -43,6 +43,6 @@ router
   .route('/:id')
   .get(getTour)
   .patch(updateTour)
-  .delete(deleteTour);
+  .delete(authController.protect, authController.restrictTo('admin') ,deleteTour);
 
 module.exports = router;
