@@ -188,4 +188,34 @@ exports.restrictTo = (...roles) => { // returning Middleware
         next();
     }
 
-}
+};
+
+exports.forgotPassword = async(req, res, next) => {
+    try{
+        // 1) Get user based on POSTed email
+        const user = await User.findOne({email : req.body.email});
+
+        if(!user){
+            return res.status(404).json({
+                status : 'fail',
+                message : 'No User found with this eMail'
+            });
+        }
+        // 2) Generate the random reset token
+
+        const resetToken = user.createPasswordResetToken();
+    // Note : isse humnei DB mein value update kri hai, ye values DB mein save nhi hui
+    // to save updated Values in DB
+        
+        // await user.save();
+        await user.save({validateBeforeSave : false});
+
+        // 3) Send it to User's email
+        }
+        catch(err){
+            return res.status(400).json({
+                status : 'fail',
+                message : err
+            });
+        }
+};

@@ -37,7 +37,7 @@ app.use((req, res, next) => {
 // Mounting the new router on a route
 // We cannot use routers before we actually declare them
 // If now there is a request for '/api/v1/tours/:id'
-// The req will enter the middleware stack an when it hits below mentioned 
+// The req will enter the middleware stack and when it hits below mentioned 
 // middleware it will run tourRouter because this route here is matched 
 // and then it enters userRouter  
 app.use('/api/v1/tours', tourRouter);

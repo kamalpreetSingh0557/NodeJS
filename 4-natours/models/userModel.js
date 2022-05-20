@@ -2,6 +2,8 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
 
+const crypto = require('crypto'); // Lec 135 ForgotPassword [module to generate random string for Token]
+
 const userSchema = new mongoose.Schema({
     name : {
         type : String,
@@ -33,6 +35,8 @@ const userSchema = new mongoose.Schema({
         }
     }, 
     passwordChangedAt : Date, // Lec 132
+    passwordResetToken : String, // Lec 135
+    passwordResetExpires : Date, // Lec 135
     role : {
         type : String,
         //enums are basically used for restricting the values of a particular field in the schema.
@@ -85,6 +89,25 @@ userSchema.methods.changedPasswordAfter = async function(JWTTimestamp){
     }
     return false;
 }
+
+userSchema.methods.createPasswordResetToken = function(){
+   const resetToken = crypto.randomBytes(32).toString('hex');
+// Note : isse humnei DB mein value update kri hai, ye values DB mein save nhi hui
+   this.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+
+   //console.log(resetToken, this.passwordResetToken); // See difference
+   console.log({resetToken}, this.passwordResetToken);
+
+   this.passwordResetExpires = Date.now() + 10 * 60 * 1000;
+
+   return resetToken;
+}
+
+/*
+1) We will return the plain text token because that's we're gonna send through the email.
+
+2) We sent one token via email and then we have the encrypted version in our database.
+*/
 
 const User = mongoose.model('User', userSchema);
 
