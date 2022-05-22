@@ -2,6 +2,8 @@ const {promisify} = require('util');
 //[Lec 132] for converting this {jwt.verify(token, process.env.JWT_SECRET);} [from returning "callback"] to retur "promises"
 const User = require('./../models/userModel');
 const jwt = require('jsonwebtoken');
+const sendEmail = require('./../utils/email');
+const crypto = require('crypto'); // Lec 137 for resetPassword
 
 const signToken = id => {
     console.log(process.env.JWT_EXPIRES_IN);
@@ -211,7 +213,38 @@ exports.forgotPassword = async(req, res, next) => {
         await user.save({validateBeforeSave : false});
 
         // 3) Send it to User's email
-        }
+
+        try{      // created in Lec 136
+            //email mein link ayega usko click krne pe reset kro password
+            const resetURL = `${req.protocol}://${req.get('host')}/api/v1/users/resetPassword/${resetToken}`;
+            const message = `Forgot your password? Submit a PATCH request with your new 
+            password and passwordConfirm to: ${resetURL}.\nIf you didn't forget your 
+            password, please ignore this email!`;
+
+            await sendEmail({
+                email : req.body.email, // user.email
+                subject : 'Your password reset token is (valid for 10 min)',
+                message
+            });
+
+            res.status(200).json({
+                status : "success",
+                message : "Token sent to email !..",
+            })
+        }catch(err){
+            user.passwordResetToken = undefined ; // Lec 136
+            user.passwordResetExpires = undefined ; // Lec 136
+
+            await user.save({validateBeforeSave : false});
+            console.log(err);
+
+            res.status(500).json({
+                status : "fail",
+                message : `There was error in sending email. Try again later !.. : ${err}`,
+            })
+        }        
+    }
+    //--------------------------------------- forgotPassword CATCH
         catch(err){
             return res.status(400).json({
                 status : 'fail',
@@ -219,3 +252,53 @@ exports.forgotPassword = async(req, res, next) => {
             });
         }
 };
+
+exports.resetPassword = async(req, res, next) => {
+    try{
+    // 1) Get user based on token
+    // Here hum plain token ko "hash" krke usko encrypted/hashed token in DB se compare krenge
+        const hashedToken = crypto.createHash('sha256').update(req.params.token).digest('hex');
+
+        const user = await User.findOne({
+            passwordResetToken : hashedToken,
+            passwordResetExpires : { $gt : Date.now() }
+        })
+
+    // 2) If token has not expired, and there is user, set the new password
+    // Since findOne mein agr user mila to mtlb token expire nhi hua hoga tbhi user mila hai na
+        if(!user){
+            return res.status(400).json({
+                status : 'fail',
+                message : 'Token is invalid or has expired'
+            
+            })
+        }
+
+        user.password = req.body.password ;
+        user.passwordConfirm = req.body.passwordConfirm ;
+        // password modify kiya hai abhi DB mein save nhi hua
+        // to ab hum passwordResetToken and passwordResetExpires ko delete ke rhe hain
+        user.passwordResetToken = undefined ;
+        user.passwordResetExpires = undefined ;
+    // We not used findOneAndUpdate, because for everything related to passwords and to the user,
+    // we always use save, because we always want to run all the validators, and the save middleware functions.
+        await user.save();
+
+    // 3) resetToken check kro ki expire to nhi hua 
+        // handled by middleware in userModel
+
+    // 4) Log the user in, send JWT
+        const token =  signToken(user._id);
+
+        res.status(200).json({
+            status : "success",
+            token
+        });
+    }
+    catch(err){
+        return res.status(400).json({
+            status : 'fail',
+            message : err
+        })
+    }
+}

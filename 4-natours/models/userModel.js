@@ -20,6 +20,7 @@ const userSchema = new mongoose.Schema({
     password : {
         type : String,
         required : [true, 'User must enter password'],
+
         minlength : 8,
         select : false
     },
@@ -46,8 +47,10 @@ const userSchema = new mongoose.Schema({
     }
 });
 
+// MIDDLEWARES
+
 userSchema.pre('save', async function(next){
-// Only run this function if password[new User] is created
+// Only run this function if new password[meaning new user] is created
 //or Password was actually modified
     if(!this.isModified('password')) return next();
 
@@ -59,6 +62,22 @@ userSchema.pre('save', async function(next){
     next();
 });
 
+userSchema.pre('save', function(next){
+// So, basically, we want to exit this middleware function right away, 
+// if the password has not been modified or if the document is new, 
+// and so we can use the isNew property
+    if(!this.isModified('password') || this.isNew) return next();
+
+    this.passwordChangedAt = Date.now(); // [see why -1000] in Lec 137
+    console.log('resetPass');
+    console.log(this.passwordChangedAt);
+    
+    next();
+});
+
+//----------------------------------------------------------------------------------------
+
+// INSTANCE METHODS
 /*
 We're creating an instance method. So an instance method is basically a method
 that is gonna be available on all documents of a certain collection
@@ -85,13 +104,15 @@ userSchema.methods.changedPasswordAfter = async function(JWTTimestamp){
         
         console.log(changedTimestamp, JWTTimestamp);
 // If the user had changed their password after the token was issued we don't want to give access to the protected route.        
-        return JWTTimestamp < changedTimestamp; // 300 < 200  
+        return JWTTimestamp < changedTimestamp; // 200 < 300  
     }
     return false;
 }
 
 userSchema.methods.createPasswordResetToken = function(){
+// random string ka TOKEN bnaya
    const resetToken = crypto.randomBytes(32).toString('hex');
+// TOKEN ko encrypt kiya   
 // Note : isse humnei DB mein value update kri hai, ye values DB mein save nhi hui
    this.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
 
@@ -108,7 +129,7 @@ userSchema.methods.createPasswordResetToken = function(){
 
 2) We sent one token via email and then we have the encrypted version in our database.
 */
-
+//----------------------------------------------------------------------------------------
 const User = mongoose.model('User', userSchema);
 
 module.exports = User;
