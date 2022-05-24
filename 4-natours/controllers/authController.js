@@ -12,6 +12,18 @@ const signToken = id => {
     });
 }
 
+const createSendToken = (user, statusCode, res, message) => {
+    const token = signToken(user._id);
+    res.status(statusCode).json({ // 201 for creation
+        status : "success",
+        message : message,
+        token,
+        data : {
+            user
+        }
+    });
+}
+
 exports.signUp = async(req, res, next) => {
     try{
         const newUser = await User.create({
@@ -29,7 +41,6 @@ exports.signUp = async(req, res, next) => {
 
         res.status(201).json({ // 201 for creation
             status : "success",
-            message : "New user created",
             token,
             data : {
                 newUser
@@ -88,12 +99,13 @@ exports.login = async(req, res, next) => {
         }
 
         // 3) If everything is ok, send token to client
-        const token = signToken(user._id);
-        res.status(200).json({
-            status : "success",
-            message : "User loggedIn",
-            token
-        })
+        createSendToken(user, 200, res, "User loggedIn");
+        // const token = signToken(user._id);
+        // res.status(200).json({
+        //     status : "success",
+        //     message : "User loggedIn",
+        //     token
+        // });
     }catch(err){
         console.log(err);
         return res.status(400).json({
@@ -288,12 +300,14 @@ exports.resetPassword = async(req, res, next) => {
         // handled by middleware in userModel
 
     // 4) Log the user in, send JWT
-        const token =  signToken(user._id);
+    createSendToken(user, 200, res, "");
+    // createSendToken(user, statusCode, res)
+    //     const token =  signToken(user._id);
 
-        res.status(200).json({
-            status : "success",
-            token
-        });
+    //     res.status(200).json({
+    //         status : "success",
+    //         token
+    //     });
     }
     catch(err){
         return res.status(400).json({
@@ -301,4 +315,89 @@ exports.resetPassword = async(req, res, next) => {
             message : err
         })
     }
-}
+};
+
+// Update Password when the user is logged In
+
+exports.updatePassword = async(req, res, next) => {
+    try{
+        // 1) Get User from collection
+
+        // We will have the current user on our request object from the protect Middleware.
+        const user = await User.findById(req.user.id).select('+password');
+        
+        // 2) Check if POSTed current password is correct
+        if(!(await user.correctPassword(req.body.passwordCurrent, user.password))) {
+            return res.status(400).json({
+                status : 'fail',
+                message : 'Your current Password is not correct [updatePassword]'
+            }) 
+        }
+        
+        // 3) If so, update password
+        user.password = req.body.password;
+        user.passwordConfirm = req.body.passwordConfirm ;
+        await user.save();    
+        //User.findByIdAndUpdate will NOT Work as intended !
+
+        // 4) Log user in, send JWT
+        createSendToken(user, 200, res, "Password Successfully Updated");
+    }
+    catch(err){
+        console.log(err);
+        return res.status(400).json({
+            status : 'fail',
+            message : err
+        });
+    }    
+};
+
+
+// My method [not works]
+// exports.updatePassword = async(req, res, next) => {
+//     try{
+//         // 1) Get User from collection
+//         const user = await User.findOne({_id : req.params.id}).select('+password');
+//         //console.log(user);
+        
+//         if(!user){
+//             return res.status(400).json({
+//                 status : 'fail',
+//                 message : 'User not found'
+//             })   
+//         }
+        
+//         // 2) Check if POSTed current password is correct
+//         //console.log(req.body.password, user.password, req.body.newPassword);
+//         const isPassCorrect = user.correctPassword(req.body.password, user.password);
+        
+//         if(!isPassCorrect){
+//             return res.status(400).json({
+//                 status : 'fail',
+//                 message : 'Password not correct [updatePassword]'
+//             }) 
+//         }
+        
+//         // 3) If so, update password
+
+//         const passwordUpdatedUser = await user.updateOne(
+//                 { _id : user._id }, 
+//                 {$set : {"password" : req.body.newPassword, "passwordConfirm" : req.body.newPasswordConfirm }},
+//                 {runValidators : true} // validate passw and conf pass
+//             )
+
+//         //await passwordUpdatedUser.save();    
+
+//         // 4) Log user in, send JWT
+//         const token =  signToken(passwordUpdatedUser._id);
+//         req.body =  passwordUpdatedUser;
+//         next();
+//     }
+//     catch(err){
+//         console.log(err);
+//         return res.status(400).json({
+//             status : 'fail',
+//             message : err
+//         });
+//     }    
+// };

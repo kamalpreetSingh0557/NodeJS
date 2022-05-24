@@ -129,6 +129,7 @@ userSchema.methods.createPasswordResetToken = function(){
 
 2) We sent one token via email and then we have the encrypted version in our database.
 */
+
 //----------------------------------------------------------------------------------------
 const User = mongoose.model('User', userSchema);
 
